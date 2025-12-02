@@ -2,15 +2,18 @@ from fastapi.middleware.cors import CORSMiddleware
 #------------------------------------
 #python throws error if I don't inline models.py
 from fastapi import FastAPI
-import database_models
-from database import engine
+from utils import database_models
+from utils.database import engine
 from router import auth, links, admin, users
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware, 
-    allow_origins = ["http://localhost:3000", 'https://mm4jtc.csb.app/'],
-    allow_methods = ["*"])
+    allow_origins = ["*"],
+    allow_methods = ["*"],
+    allow_headers = ["*"],
+    allow_credentials = True
+    )
 
 database_models.Base.metadata.create_all(bind=engine)
 

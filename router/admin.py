@@ -1,9 +1,9 @@
 from typing import Optional, Annotated
 from fastapi import APIRouter, Depends, Path, Query, HTTPException
 from sqlalchemy.exc import IntegrityError
-from database import sessionLocal, engine
+from utils.database import sessionLocal, engine
 from starlette import status
-import database_models
+from utils import database_models
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from .auth import get_current_user

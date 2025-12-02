@@ -1,10 +1,10 @@
 from typing import Optional, Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-import database_models
+from utils import database_models
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from database import sessionLocal, engine
+from utils.database import sessionLocal, engine
 from starlette import status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from datetime import timedelta,datetime,timezone
@@ -93,17 +93,29 @@ def create_access_token(username: str, user_id: int, role:str, expires_delta: ti
     encode.update({'exp':expires})
     return jwt.encode(encode,SECRET_KEY,algorithm = ALGORITHM)
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+def decode_user_from_token(token: str) -> dict:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get('sub') #type: ignore
-        user_id: int = payload.get('id') #type: ignore
-        role: int = payload.get('role') #type: ignore
-        if username is None or user_id is None or user_id is None:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
-        return {'username':username, 'id': user_id, 'role':role}
+        username: str = payload.get('sub')#type: ignore
+        user_id: int = payload.get('id')#type: ignore
+        role: int = payload.get('role')#type: ignore
+
+        if not username or not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate user."
+            )
+
+        return {"username": username, "id": user_id, "role": role}
+
     except JWTError:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate user."
+        )
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+    return decode_user_from_token(token)
 
 
 @router.get("/")

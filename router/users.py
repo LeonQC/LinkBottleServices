@@ -1,14 +1,11 @@
 from typing import Optional, Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from database_models import Users
+from utils.database_models import Users
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from database import sessionLocal, engine
+from utils.database import sessionLocal, engine
 from starlette import status
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from datetime import timedelta,datetime,timezone
-from jose import jwt, JWTError
 from .auth import get_current_user
 
 router = APIRouter(

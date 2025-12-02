@@ -3,7 +3,7 @@ __pycache__/
 *.py[codz]
 *$py.class
 docker-compose.yaml
-
+frontend/
 # C extensions
 *.so
 
