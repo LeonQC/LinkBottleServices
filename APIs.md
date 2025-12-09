@@ -46,6 +46,7 @@ If the token is missing or invalid, the server responds with `401 Unauthorized` 
 ### `Users` Database
 
 Stores the information of users.
+It has been expanded to handle OAuth logins with GitHub and Google. OAuth logins could have a null email.
 
 ```py
 class Users(Base):
@@ -53,19 +54,22 @@ class Users(Base):
     __tablename__ = "users"
 
     id =  mapped_column(Integer, primary_key=True, index=True)
-    email =  mapped_column(String, unique= True)
-    username =  mapped_column(String, unique= True)
-    first_name =  mapped_column(String)
-    last_name =  mapped_column(String)
+    email =  mapped_column(String, unique= True, nullable=True)
+    username =  mapped_column(String, unique= True, nullable=False)
+    first_name =  mapped_column(String, nullable=True)
+    last_name =  mapped_column(String, nullable=True)
     hashed_password =  mapped_column(String)
     is_active =  mapped_column(Boolean, default=True)
     role =  mapped_column(String)
     phone_number =  mapped_column(String, nullable=True)
+    google_sub = mapped_column(String, unique=True, nullable=True)
+    github_id = mapped_column(String, unique=True, nullable=True)
 ```
 
 ### `Links` Database
 
 Stores the information of created links. When a shortened link is created, it either has an automatically generated `short_code` or an `alias` set by the user. The differentiation between `short_code` and `alias` is necessary: When a different user tries to create a short link for an existing original url and without using a customized `alias`, they are simply given the link that has the `short_code`.
+`user_id` field has been removed.
 
 ```py
 class Links(Base):
@@ -80,7 +84,6 @@ class Links(Base):
     short_url =  mapped_column(String, unique=True, nullable=False)
     created_at =  mapped_column(TIMESTAMP)
     clicks =  mapped_column(Integer, default=0)
-    user_id =  mapped_column(Integer, ForeignKey('users.id', ondelete="SET NULL"), nullable=True, index=True)
 ```
 
 ### `userLinks` Database
@@ -201,25 +204,16 @@ Returns all links associated with the authenticated user.
 ```
 ---
 
-### 4. `DELETE /by_url/` — Delete link by original URL
+### 4. `DELETE /by_url/` — Delete link by original URL (REMOVED)
 
-Deletes a link belonging to the user using with matching URL. Currently unused.
-
-**Auth required**: Yes  
-
-**Query param:** `url`
-
-**Response 200**
-
-```py
-"Link deleted"
-```
+endpoint removed as it served no purpose.
 
 ---
 
 ### 5. `DELETE /by_key/` — Delete link by short_code or alias
 
-Deletes a link belonging to the user using with matching short code or alias.
+Deletes a link from a user's customized list with matching short code or alias.
+If the link ends up having no user, deletes the link as well.
 
 **Auth required**: Yes  
 
